@@ -1,6 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Title, Tooltip, Legend);
+
 
 export default function EditClient({ params }) {
   const [form, setForm] = useState(null);
@@ -34,6 +48,25 @@ export default function EditClient({ params }) {
     where: { clientId: params.id },
     orderBy: { createdAt: "desc" },
   });
+
+
+  // Fetch progress entries (inside your existing server component)
+  const progress = await prisma.progressEntry.findMany({
+    where: { clientId: params.id },
+    orderBy: { date: "asc" },
+  });
+
+  const weightData = {
+    labels: progress.map((e) => new Date(e.date).toLocaleDateString()),
+    datasets: [
+      {
+        label: "Weight (kg)",
+        data: progress.map((e) => e.weight),
+        borderColor: "rgb(59 130 246)", // blue-500
+        backgroundColor: "rgba(59,130,246,0.3)",
+      },
+    ],
+  };
 
   return (
     <>
@@ -87,6 +120,23 @@ export default function EditClient({ params }) {
           ))}
         </ul>
       )}
+
+
+      <hr className="my-6" />
+      <h3 className="text-lg font-bold mb-2">Progress</h3>
+      <Link
+        href={`/dashboard/clients/${params.id}/progress/new`}
+        className="inline-block mb-4 px-4 py-2 bg-green-600 text-white rounded"
+      >
+        + Log Progress
+      </Link>
+
+      {progress.length === 0 ? (
+        <p className="text-gray-500">No progress entries yet.</p>
+      ) : (
+        <Line data={weightData} />
+      )}
+
 
     </>
 

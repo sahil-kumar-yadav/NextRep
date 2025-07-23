@@ -41,3 +41,15 @@ model Client {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }
+
+
+model ProgressEntry {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  weight    Float?
+  bodyFat   Float?
+  notes     String?
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+}
