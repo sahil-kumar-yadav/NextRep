@@ -53,3 +53,13 @@ model ProgressEntry {
   date      DateTime @default(now())
   createdAt DateTime @default(now())
 }
+
+
+model Photo {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  url       String
+  createdAt DateTime @default(now())
+}
+

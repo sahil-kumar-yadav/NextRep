@@ -20,6 +20,18 @@ export default function EditClient({ params }) {
   const [form, setForm] = useState(null);
   const router = useRouter();
 
+  const [photos, setPhotos] = useState([]);
+
+  async function fetchPhotos() {
+    const res = await fetch(`/api/photos?clientId=${clientId}`);
+    const data = await res.json();
+    setPhotos(data);
+  }
+
+  useEffect(() => {
+    fetchPhotos();
+  }, []);
+
   useEffect(() => {
     fetch(`/api/clients/${params.id}`)
       .then((res) => res.json())
@@ -137,6 +149,33 @@ export default function EditClient({ params }) {
         <Line data={weightData} />
       )}
 
+      <div>
+      <h3 className="text-lg font-bold mt-6 mb-2">Progress Photos</h3>
+      <UploadButton
+        endpoint="clientPhoto"
+        onClientUploadComplete={async (res) => {
+          const uploaded = res[0];
+          await fetch("/api/photos", {
+            method: "POST",
+            body: JSON.stringify({
+              clientId,
+              url: uploaded.url,
+            }),
+          });
+          fetchPhotos();
+        }}
+        onUploadError={(e) => alert(`Upload failed: ${e.message}`)}
+      />
+      <div className="grid grid-cols-3 gap-4 mt-4">
+        {photos.map((p) => (
+          <img
+            key={p.id}
+            src={p.url}
+            className="rounded border object-cover w-full h-40"
+          />
+        ))}
+      </div>
+    </div>
 
     </>
 
