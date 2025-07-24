@@ -2,14 +2,29 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 
-export default async function Home() {
+export default async function HomePage() {
   const { userId } = auth();
 
   if (userId) {
-    const user = await prisma.user.findUnique({
+    // Ensure user exists in DB
+    let user = await prisma.user.findUnique({
       where: { clerkId: userId },
     });
 
+    if (!user) {
+      // Call API to create the user
+      await fetch(`${process.env.NEXT_PUBLIC_URL}/api/create-user`, {
+        method: "POST",
+        cache: "no-store",
+      });
+
+      // Refetch user after creating
+      user = await prisma.user.findUnique({
+        where: { clerkId: userId },
+      });
+    }
+
+    // Redirect based on role
     if (user?.role === "TRAINER") {
       redirect("/dashboard");
     } else if (user?.role === "CLIENT") {
