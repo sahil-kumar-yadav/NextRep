@@ -1,9 +1,14 @@
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 
 export default async function ClientsPage() {
   const { userId } = auth();
+
+  if (!userId) {
+    return <div>Please sign in to view your clients.</div>;
+  }
+
   const trainer = await prisma.user.upsert({
     where: { clerkId: userId },
     update: {},
