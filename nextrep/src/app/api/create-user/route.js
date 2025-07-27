@@ -1,23 +1,30 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 
-export async function POST() {
+export async function POST(req) {
   const { userId } = auth();
-  if (!userId) return new Response("Unauthorized", { status: 401 });
+  const body = await req.json();
+  const role = body?.role || "TRAINER"; // Default fallback
 
-  const existingUser = await prisma.user.findUnique({
+  if (!userId || !["TRAINER", "CLIENT"].includes(role)) {
+    return new Response("Unauthorized or invalid role", { status: 400 });
+  }
+
+  // Avoid duplicate creation
+  const existing = await prisma.user.findUnique({
     where: { clerkId: userId },
   });
 
-  if (!existingUser) {
-    // You can hardcode the role for now or assign based on email
-    await prisma.user.create({
-      data: {
-        clerkId: userId,
-        role: "TRAINER", // or "CLIENT"
-      },
-    });
+  if (existing) {
+    return new Response("User already exists", { status: 200 });
   }
 
-  return new Response("OK");
+  await prisma.user.create({
+    data: {
+      clerkId: userId,
+      role,
+    },
+  });
+
+  return new Response("User created", { status: 201 });
 }

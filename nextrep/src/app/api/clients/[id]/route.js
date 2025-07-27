@@ -1,28 +1,60 @@
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
-
-export async function GET(req, { params }) {
-  const { userId } = auth();
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } });
-
-  const client = await prisma.client.findUnique({
-    where: { id: params.id, userId: user?.id },
-  });
-
-  if (!client) return new Response("Not found", { status: 404 });
-  return Response.json(client);
-}
+import { NextResponse } from "next/server";
 
 export async function PUT(req, { params }) {
+  const { userId } = auth();
+  const { id } = params;
+
+  const trainer = await prisma.user.findUnique({
+    where: { clerkId: userId },
+  });
+
+  if (!trainer || trainer.role !== "TRAINER") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const client = await prisma.client.findUnique({
+    where: { id },
+  });
+
+  if (!client || client.trainerId !== trainer.id) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  }
+
   const body = await req.json();
+
   const updated = await prisma.client.update({
-    where: { id: params.id },
+    where: { id },
     data: body,
   });
-  return Response.json(updated);
+
+  return NextResponse.json(updated);
 }
 
 export async function DELETE(req, { params }) {
-  await prisma.client.delete({ where: { id: params.id } });
-  return new Response("Deleted", { status: 200 });
+  const { userId } = auth();
+  const { id } = params;
+
+  const trainer = await prisma.user.findUnique({
+    where: { clerkId: userId },
+  });
+
+  if (!trainer || trainer.role !== "TRAINER") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const client = await prisma.client.findUnique({
+    where: { id },
+  });
+
+  if (!client || client.trainerId !== trainer.id) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  }
+
+  await prisma.client.delete({
+    where: { id },
+  });
+
+  return NextResponse.json({ message: "Client deleted" });
 }
