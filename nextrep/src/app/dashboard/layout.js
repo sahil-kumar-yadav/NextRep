@@ -1,7 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
-import TrainerNav from "@/components/layout/TrainerNav";
+import TrainerNav from "@/components/TrainerNav";
+// import TrainerNav from "@/components/layout/TrainerNav";
 
 export default async function TrainerLayout({ children }) {
   const { userId } = auth();
