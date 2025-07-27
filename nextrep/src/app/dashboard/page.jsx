@@ -17,7 +17,6 @@ export default async function DashboardPage() {
   return (
     <main className="p-6">
       <h1 className="text-2xl font-bold mb-4">Trainer Dashboard</h1>
-
       <div className="mb-4">
         <Link
           href="/dashboard/clients/new"
@@ -26,7 +25,6 @@ export default async function DashboardPage() {
           + Add New Client
         </Link>
       </div>
-
       <div className="grid gap-4">
         {user.clients.map((client) => (
           <div key={client.id} className="border rounded p-4">

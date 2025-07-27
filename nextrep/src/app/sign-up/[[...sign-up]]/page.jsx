@@ -1,5 +1,4 @@
 "use client";
-
 import { SignUp } from "@clerk/nextjs";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,21 +8,17 @@ export default function CustomSignUpPage() {
   const router = useRouter();
 
   const handleComplete = async () => {
-    // Create user in your DB with selected role
     await fetch("/api/create-user", {
       method: "POST",
       body: JSON.stringify({ role }),
       headers: { "Content-Type": "application/json" },
     });
-
-    // Redirect to role-based logic page
     router.push("/redirect");
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-6 p-6">
       <h1 className="text-3xl font-bold">Sign Up</h1>
-
       <label className="text-lg">
         Select your role:
         <select
@@ -35,12 +30,11 @@ export default function CustomSignUpPage() {
           <option value="CLIENT">Client</option>
         </select>
       </label>
-
       <SignUp
         signUpFields={[{ type: "emailAddress" }]}
         appearance={{ elements: { card: "shadow-xl" } }}
         signUpContinueButtonMode="manual"
-        afterSignUp={handleComplete} // Modern replacement for deprecated props
+        afterSignUp={handleComplete}
       />
     </div>
   );

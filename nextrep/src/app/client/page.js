@@ -1,4 +1,3 @@
-
 import { getCurrentUserWithRole } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -16,7 +15,6 @@ export default async function ClientPortal() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Welcome, {client.name}</h1>
-
       <div className="mb-6">
         <h2 className="text-lg font-bold">Your Plans</h2>
         {client.plans.length === 0 ? (
@@ -33,7 +31,6 @@ export default async function ClientPortal() {
           </ul>
         )}
       </div>
-
       <div className="mb-6">
         <h2 className="text-lg font-bold">Progress Photos</h2>
         {client.photos.length === 0 ? (

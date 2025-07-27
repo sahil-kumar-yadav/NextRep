@@ -2,21 +2,32 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 
+// Home page: redirects signed-in users based on their role, shows landing for guests
 export default async function Home() {
   const { userId } = auth();
 
   if (userId) {
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
+    let user = null;
+    try {
+      user = await prisma.user.findUnique({
+        where: { clerkId: userId },
+      });
+    } catch (error) {
+      // Redirect to error page if DB fails
+      redirect("/error");
+    }
 
-    if (user?.role === "TRAINER") {
+    // Redirect to onboarding if user or role missing
+    if (!user || !user.role) {
+      redirect("/select-role");
+    } else if (user.role === "TRAINER") {
       redirect("/dashboard");
-    } else if (user?.role === "CLIENT") {
+    } else if (user.role === "CLIENT") {
       redirect("/client");
     }
   }
 
+  // Landing page for guests
   return (
     <main className="p-8">
       <h1 className="text-4xl font-bold mb-4">Fitness CRM</h1>
