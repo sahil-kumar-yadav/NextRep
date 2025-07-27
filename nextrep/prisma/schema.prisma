@@ -12,6 +12,11 @@ enum Role {
   CLIENT
 }
 
+enum PlanType {
+  WORKOUT
+  MEAL
+}
+
 // User of the app (e.g., a trainer)
 model User {
   id        String   @id @default(cuid())
@@ -41,28 +46,29 @@ model Client {
 
 // Workout or meal plan for a client
 model Plan {
-  id        String   @id @default(cuid())
-  type      String   // Consider changing to enum if fixed values: "workout", "meal"
-  title     String
+  id          String   @id @default(cuid())
+  type        PlanType
+  title       String
   description String
-  content   String
-  clientId  String
+  content     String
+  clientId    String
 
-  client    Client   @relation(fields: [clientId], references: [id])
-  createdAt DateTime @default(now())
+  client      Client   @relation(fields: [clientId], references: [id])
+  createdAt   DateTime @default(now())
 }
 
-// Progress tracking entry
+// Progress tracking entry (merged version)
 model ProgressEntry {
   id        String   @id @default(cuid())
   clientId  String
   weight    Float?
   bodyFat   Float?
+  photoUrl  String?
   notes     String?
   date      DateTime @default(now())
+  createdAt DateTime @default(now())
 
   client    Client   @relation(fields: [clientId], references: [id])
-  createdAt DateTime @default(now())
 }
 
 // Client photos (e.g., progress pictures)
@@ -73,14 +79,4 @@ model Photo {
 
   client    Client   @relation(fields: [clientId], references: [id])
   createdAt DateTime @default(now())
-}
-
-
-model Progress {
-  id        String   @id @default(cuid())
-  date      DateTime @default(now())
-  weight    Float
-  photoUrl  String?
-  clientId  String
-  client    Client   @relation(fields: [clientId], references: [id])
 }
