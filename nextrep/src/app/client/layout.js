@@ -1,10 +1,20 @@
-import ClientNav from "@/components/ClientNav";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
+import ClientNav from "@/components/layout/ClientNav";
 
-export default function ClientLayout({ children }) {
+export default async function ClientLayout({ children }) {
+  const { userId } = auth();
+
+  if (!userId) redirect("/sign-in");
+
+  const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+  if (user?.role !== "CLIENT") redirect("/");
+
   return (
-    <div className="flex min-h-screen">
+    <div>
       <ClientNav />
-      <main className="flex-1 p-6">{children}</main>
+      <main className="p-6">{children}</main>
     </div>
   );
 }

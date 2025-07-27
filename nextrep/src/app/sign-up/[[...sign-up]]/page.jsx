@@ -5,20 +5,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CustomSignUpPage() {
-  const [role, setRole] = useState("TRAINER"); // Default role
+  const [role, setRole] = useState("TRAINER");
   const router = useRouter();
 
   const handleComplete = async () => {
-    // Call your API to create user with selected role
+    // Create user in your DB with selected role
     await fetch("/api/create-user", {
       method: "POST",
       body: JSON.stringify({ role }),
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
 
-    router.push("/"); // Let homepage handle redirect based on role
+    // Redirect to role-based logic page
+    router.push("/redirect");
   };
 
   return (
@@ -38,13 +37,10 @@ export default function CustomSignUpPage() {
       </label>
 
       <SignUp
-        afterSignUpUrl="/"
-        appearance={{ elements: { card: "shadow-xl" } }}
         signUpFields={[{ type: "emailAddress" }]}
-        unsafeMetadata={{ role }}
-        redirectUrl="/"
+        appearance={{ elements: { card: "shadow-xl" } }}
         signUpContinueButtonMode="manual"
-        afterSignUp={handleComplete}
+        afterSignUp={handleComplete} // Modern replacement for deprecated props
       />
     </div>
   );

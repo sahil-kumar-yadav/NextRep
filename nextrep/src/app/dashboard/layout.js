@@ -1,10 +1,20 @@
-import TrainerNav from "@/components/TrainerNav";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
+import TrainerNav from "@/components/layout/TrainerNav";
 
-export default function TrainerLayout({ children }) {
+export default async function TrainerLayout({ children }) {
+  const { userId } = auth();
+
+  if (!userId) redirect("/sign-in");
+
+  const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+  if (user?.role !== "TRAINER") redirect("/");
+
   return (
-    <div className="flex min-h-screen">
+    <div>
       <TrainerNav />
-      <main className="flex-1 p-6">{children}</main>
+      <main className="p-6">{children}</main>
     </div>
   );
 }
