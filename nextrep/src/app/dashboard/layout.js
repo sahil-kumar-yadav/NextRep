@@ -1,14 +1,10 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import TrainerNav from "@/components/TrainerNav";
 
-export default function DashboardLayout({ children }) {
-  const { userId } = auth();
-  if (!userId) redirect("/");
-
+export default function TrainerLayout({ children }) {
   return (
-    <main className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Trainer Dashboard</h1>
-      {children}
-    </main>
+    <div className="flex min-h-screen">
+      <TrainerNav />
+      <main className="flex-1 p-6">{children}</main>
+    </div>
   );
 }

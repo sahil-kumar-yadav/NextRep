@@ -44,6 +44,7 @@ model Plan {
   id        String   @id @default(cuid())
   type      String   // Consider changing to enum if fixed values: "workout", "meal"
   title     String
+  description String
   content   String
   clientId  String
 
@@ -72,4 +73,14 @@ model Photo {
 
   client    Client   @relation(fields: [clientId], references: [id])
   createdAt DateTime @default(now())
+}
+
+
+model Progress {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  weight    Float
+  photoUrl  String?
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
 }
