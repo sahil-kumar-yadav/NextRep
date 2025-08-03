@@ -1,26 +1,13 @@
-"use client";
-
-import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 
 export default function Home() {
-  const { isLoaded, isSignedIn } = useAuth();
-  const router = useRouter();
+  const { userId } = auth();
 
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (isSignedIn) {
-      // Always redirect signed-in users to /redirect for role-based routing
-      router.replace("/redirect");
-    }
-  }, [isLoaded, isSignedIn, router]);
-
-  if (!isLoaded) {
-    return <div>Loading...</div>;
+  if (userId) {
+    redirect("/redirect");
   }
 
-  // Show landing page for guests
   return (
     <main className="p-8">
       <h1 className="text-4xl font-bold mb-4">Fitness CRM</h1>
