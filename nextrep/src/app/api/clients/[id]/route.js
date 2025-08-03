@@ -1,60 +1,32 @@
-import { auth } from "@clerk/nextjs/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
-import { NextResponse } from "next/server";
 
-export async function PUT(req, { params }) {
-  const { userId } = auth();
-  const { id } = params;
-
-  const trainer = await prisma.user.findUnique({
-    where: { clerkId: userId },
-  });
-
-  if (!trainer || trainer.role !== "TRAINER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const client = await prisma.client.findUnique({
-    where: { id },
-  });
-
-  if (!client || client.trainerId !== trainer.id) {
-    return NextResponse.json({ error: "Access denied" }, { status: 403 });
-  }
-
+export async function POST(req) {
+  const session = await getServerSession(authOptions);
   const body = await req.json();
+  const role = body?.role || "TRAINER";
 
-  const updated = await prisma.client.update({
-    where: { id },
-    data: body,
-  });
-
-  return NextResponse.json(updated);
-}
-
-export async function DELETE(req, { params }) {
-  const { userId } = auth();
-  const { id } = params;
-
-  const trainer = await prisma.user.findUnique({
-    where: { clerkId: userId },
-  });
-
-  if (!trainer || trainer.role !== "TRAINER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id || !["TRAINER", "CLIENT"].includes(role)) {
+    return new Response("Unauthorized or invalid role", { status: 400 });
   }
 
-  const client = await prisma.client.findUnique({
-    where: { id },
+  // Avoid duplicate creation
+  const existing = await prisma.user.findUnique({
+    where: { id: session.user.id },
   });
 
-  if (!client || client.trainerId !== trainer.id) {
-    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  if (existing) {
+    return new Response("User already exists", { status: 200 });
   }
 
-  await prisma.client.delete({
-    where: { id },
+  await prisma.user.create({
+    data: {
+      id: session.user.id,
+      email: session.user.email,
+      role,
+    },
   });
 
-  return NextResponse.json({ message: "Client deleted" });
+  return new Response("User created", { status: 201 });
 }

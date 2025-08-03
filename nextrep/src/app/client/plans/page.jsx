@@ -1,37 +1,28 @@
-import { auth } from "@clerk/nextjs/server";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
 
-export default async function ClientPlansPage() {
-  const { userId } = auth();
+export default async function RedirectPage() {
+  const session = await getServerSession(authOptions);
 
-  const client = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      client: {
-        include: {
-          plans: true,
-        },
-      },
-    },
+  if (!session?.user) {
+    redirect("/");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
   });
 
-  const plans = client?.client?.plans || [];
+  if (!user) {
+    redirect("/sign-up");
+  }
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">My Plans</h1>
-      {plans.length === 0 ? (
-        <p>No plans assigned yet.</p>
-      ) : (
-        <ul className="space-y-4">
-          {plans.map((plan) => (
-            <li key={plan.id} className="border p-4 rounded bg-white shadow">
-              <h2 className="font-semibold text-lg">{plan.title}</h2>
-              <p className="text-sm text-gray-600">{plan.description}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
+  if (user.role === "TRAINER") {
+    redirect("/dashboard");
+  } else if (user.role === "CLIENT") {
+    redirect("/client");
+  }
+
+  redirect("/");
 }

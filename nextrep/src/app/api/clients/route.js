@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs";
 import { prisma } from "@/lib/db";
 
 export async function POST(req) {

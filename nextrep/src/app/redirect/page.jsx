@@ -1,34 +1,28 @@
-import { auth } from "@clerk/nextjs/server";
+import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
 
 export default async function RedirectPage() {
-  const { userId } = auth();
-  console.log("[/redirect] userId:", userId);
+  const session = await getServerSession(authOptions);
 
-  if (!userId) {
-    console.log("[/redirect] No userId found, redirecting to /");
-    redirect("/"); // Not logged in
+  if (!session?.user) {
+    redirect("/");
   }
 
   const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
+    where: { id: session.user.id },
   });
-  console.log("[/redirect] DB user:", user);
 
   if (!user) {
-    console.log("[/redirect] No user found in DB, redirecting to /sign-up");
     redirect("/sign-up");
   }
 
   if (user.role === "TRAINER") {
-    console.log("[/redirect] User is TRAINER, redirecting to /dashboard");
     redirect("/dashboard");
   } else if (user.role === "CLIENT") {
-    console.log("[/redirect] User is CLIENT, redirecting to /client");
     redirect("/client");
   }
 
-  console.log("[/redirect] Unknown role, redirecting to /");
   redirect("/");
 }

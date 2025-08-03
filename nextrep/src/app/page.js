@@ -1,10 +1,11 @@
+import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-export default function Home() {
-  const { userId } = auth();
+export default async function Home() {
+  const session = await getServerSession(authOptions);
 
-  if (userId) {
+  if (session?.user) {
     redirect("/redirect");
   }
 
@@ -15,7 +16,7 @@ export default function Home() {
         A powerful CRM for personal trainers and fitness studios.
       </p>
       <a
-        href="/sign-in"
+        href="/api/auth/signin"
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
       >
         Sign In
