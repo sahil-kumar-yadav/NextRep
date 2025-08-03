@@ -1,10 +1,12 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+export default function middleware(req) {
+  console.log("Clerk middleware running for:", req.nextUrl.pathname);
+  return clerkMiddleware()(req);
+}
 
 export const config = {
   matcher: [
-    // Protect everything except these Clerk auth routes:
-    "/((?!_next|sign-in|sign-up|sign-out|api|static|.*\\..*).*)",
+    "/((?!_next|static|public|favicon.ico).*)",
   ],
 };
