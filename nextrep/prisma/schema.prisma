@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  TRAINER
+  CLIENT
+  ADMIN
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String?
@@ -15,15 +21,101 @@ model User {
   role      Role     @default(CLIENT)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // relations
+  trainerClientsAsTrainer TrainerClient[] @relation("TrainerClientsAsTrainer")
+  trainerClientsAsClient  TrainerClient[] @relation("TrainerClientsAsClient")
+  createdPlans            WorkoutPlan[]    @relation("TrainerPlans")
+  assignments             PlanAssignment[] @relation("ClientAssignments")
+  assignedPlans           PlanAssignment[] @relation("TrainerAssignedPlans")
+  progressLogs            ProgressLog[]
+
+  // optional (Auth compatibility)
   accounts  Account[]
   sessions  Session[]
 }
 
-enum Role {
-  TRAINER
-  CLIENT
+model TrainerClient {
+  id        String   @id @default(cuid())
+  trainerId String
+  clientId  String
+  createdAt DateTime @default(now())
+
+  trainer User @relation("TrainerClientsAsTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  client  User @relation("TrainerClientsAsClient", fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, clientId])
 }
 
+model WorkoutPlan {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  trainerId   String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  trainer     User             @relation("TrainerPlans", fields: [trainerId], references: [id], onDelete: Cascade)
+  exercises   PlanExercise[]
+  assignments PlanAssignment[]
+}
+
+model PlanExercise {
+  id          String      @id @default(cuid())
+  planId      String
+  name        String
+  sets        Int?
+  reps        String?
+  restSeconds Int?
+  notes       String?
+  order       Int?
+
+  plan WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model PlanAssignment {
+  id            String      @id @default(cuid())
+  planId        String
+  clientId      String
+  assignedById  String
+  startDate     DateTime?
+  endDate       DateTime?
+  isActive      Boolean     @default(true)
+  assignedAt    DateTime    @default(now())
+
+  plan       WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  client     User        @relation("ClientAssignments", fields: [clientId], references: [id], onDelete: Cascade)
+  assignedBy User        @relation("TrainerAssignedPlans", fields: [assignedById], references: [id], onDelete: Cascade)
+
+  progressLogs ProgressLog[]
+}
+
+model ProgressLog {
+  id             String       @id @default(cuid())
+  clientId       String
+  planAssignmentId String?
+  date           DateTime     @default(now())
+  notes          String?
+  metrics        Json?
+  createdAt      DateTime     @default(now())
+
+  client       User         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  planAssignment PlanAssignment? @relation(fields: [planAssignmentId], references: [id], onDelete: SetNull)
+  photos        ProgressPhoto[]
+}
+
+model ProgressPhoto {
+  id            String      @id @default(cuid())
+  progressLogId String
+  url           String
+  uploadedAt    DateTime    @default(now())
+
+  progressLog ProgressLog @relation(fields: [progressLogId], references: [id], onDelete: Cascade)
+}
+
+/*
+  Optional tables for future Auth.js integration (keeps schema stable)
+*/
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -57,3 +149,5 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+

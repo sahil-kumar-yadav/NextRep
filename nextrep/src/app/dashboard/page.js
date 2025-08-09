@@ -1,21 +1,12 @@
-// app/dashboard/page.js
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getDevUser } from "@/lib/getDevUser";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  const user = await getDevUser("TRAINER"); // change to CLIENT for testing
 
-  if (!session) {
-    redirect("/signin");
+  if (user.role === "TRAINER") {
+    redirect("/dashboard/trainer");
+  } else {
+    redirect("/dashboard/client");
   }
-
-  return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold">
-        Welcome, {session.user.name} ({session.user.role})
-      </h1>
-    </div>
-  );
 }
-
